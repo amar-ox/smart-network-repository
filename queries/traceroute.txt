@@ -1,50 +1,53 @@
-======================================= Traceroute ======================================================= 
-MATCH (r:Router{name:'leaf01'})-[:CONTAINS]->(srcItf:Ltp {name: 'Loopback0'})-[*2]->(src:Ip4Ctp)
-MATCH (h:Host {name: 'leaf02'})-[:CONTAINS]->(:Ltp)-[*2]->(dst:Ip4Ctp)
-WITH r, srcItf, src, dst ORDER BY dst.ipAddr LIMIT 1
-MERGE (packet:Packet {srcIp: src.ipAddr, srcPort: 49152, dstIp: dst.ipAddr, dstPort: 33434, protocol: 'UDP', dstSubnet: dst.netAddr, simulation: true})
-
+CALL custom.traceroute('leaf01', '10.0.104.104', '10.0.104.0/24', 33434, 'UDP') YIELD ignored
+RETURN ignored
 ----
-// DEMO: 
-MATCH (r:Router{name:'leaf01'})-[:CONTAINS]->(srcItf:Ltp {name: 'Loopback0'})-[*2]->(src:Ip4Ctp)
-MERGE (srcItf)<-[:IN_PACKET {simulation: true}]-(packet:Packet {srcIp: src.ipAddr, srcPort: 49152, dstIp: '10.0.104.104', dstPort: 33434, protocol: 'UDP', dstSubnet: '10.0.104.0/24', simulation: true})
+MATCH (p:Packet)-[r]-(x)<-[:CONTAINS|HAS_ACL|HAS_FIB*1..3]-(h:Host)
+OPTIONAL MATCH (p)-[:REACHED]-(d)
+WITH DISTINCT h,r,x ORDER BY r.hop, id(r)
+RETURN h.name, r, x
+----
+MATCH (p:Packet)-[r]-()
+DELETE r,p
+
+=================
+CALL apoc.custom.declareProcedure("traceroute(src::STRING, dst_ip::STRING, dst_sn::STRING, dst_port::INT, protocol::STRING) :: (ignored::INT)", 
+"MATCH (r:Router{name:$src})-[:CONTAINS]->(srcItf:Ltp {name: 'Loopback0'})-[*2]->(src:Ip4Ctp)
+MERGE (srcItf)<-[:IN_PACKET {hop: 0}]-(packet:Packet {srcIp: src.ipAddr, srcPort: 49152, dstIp: $dst_ip, dstPort: $dst_port, protocol: $protocol, dstSubnet: $dst_sn})
 WITH r, packet, srcItf
 MATCH (r)-[*3]->(d:Ip4Ctp)
 MATCH (r)-[:HAS_FIB]->(fib:FibRoute)-[:EGRESS]->(:Ip4Ctp)<-[*2]-(egrItf:Ltp)
 WHERE id(egrItf) <> id(srcItf) AND fib.to = packet.dstSubnet AND d.ipAddr <> packet.dstIp
 WITH DISTINCT r, packet, egrItf, fib
-MERGE (fib)<-[:FWD_WITH {simulation: true}]-(packet)
+MERGE (fib)<-[:FWD_WITH {hop: 0}]-(packet)
 WITH r, egrItf, packet
 MATCH (acl:AclRule {direction: 'egress'})
 WHERE ((acl)<-[:HAS_ACL]-(r) OR (acl)<-[:HAS_ACL]-(egrItf)) AND (acl.sIP = packet.srcIp OR acl.sIP = 'ANY') AND (acl.sPort = packet.srcPort OR acl.sPort = 'ANY') AND (acl.dIP = packet.dstIp OR acl.dIP = 'ANY') AND (acl.dPort = packet.dstPort OR acl.dPort = 'ANY') AND (acl.protocol = packet.protocol OR acl.protocol = 'ANY')
 WITH packet, egrItf, acl ORDER BY acl.priority DESC
 WITH packet, egrItf, head(collect(acl)) as outAclRule
-MERGE (outAclRule)-[:APPLIES_OUT_ACL {action: outAclRule.action, simulation: true}]->(packet)
+MERGE (outAclRule)-[:APPLIES_OUT_ACL {action: outAclRule.action, hop: 0}]->(packet)
 WITH packet, egrItf, outAclRule WHERE outAclRule.action = 'ACCEPT'
 MATCH (egrItf)-[:HAS_LINK]-(nh:Ltp)
-CALL custom.trHop(id(packet), id(nh)) YIELD ignored
-RETURN ignored
-
+CALL custom.trHop(id(packet), id(nh), 1) YIELD ignored
+RETURN null AS ignored", 'write')
 ----
-
-CALL apoc.custom.declareProcedure("trHop(pkt_id::INT, itf_id::INT) :: (ignored::INT)", 
+CALL apoc.custom.declareProcedure("trHop(pkt_id::INT, itf_id::INT, hop::INT) :: (ignored::INT)", 
 "MATCH (packet:Packet) WHERE id(packet) = $pkt_id
-MATCH (r:Host)-[:CONTAINS]->(srcItf:Ltp) 
+MATCH (r:Host)-[:CONTAINS]->(srcItf:Ltp)
 WHERE id(srcItf) = $itf_id AND NOT (packet)-[:IN_PACKET]->(srcItf)
-MERGE (srcItf)<-[:IN_PACKET {simulation: true}]-(packet)
+MERGE (srcItf)<-[:IN_PACKET {hop: $hop}]-(packet)
 WITH r, srcItf, packet
 // ACL IN:
 MATCH (acl:AclRule {direction: 'ingress'})
 WHERE ((acl)<-[:HAS_ACL]-(r) OR (acl)<-[:HAS_ACL]-(srcItf)) AND (acl.sIP = packet.srcIp OR acl.sIP = 'ANY') AND (acl.sPort = packet.srcPort OR acl.sPort = 'ANY') AND (acl.dIP = packet.dstIp OR acl.dIP = 'ANY') AND (acl.dPort = packet.dstPort OR acl.dPort = 'ANY') AND (acl.protocol = packet.protocol OR acl.protocol = 'ANY')
 WITH r, packet, srcItf, acl ORDER BY acl.priority DESC
 WITH r, packet, srcItf, head(collect(acl)) as inAclRule
-MERGE (inAclRule)-[:APPLIES_IN_ACL {action: inAclRule.action, simulation: true}]->(packet)
+MERGE (inAclRule)-[:APPLIES_IN_ACL {action: inAclRule.action, hop: $hop}]->(packet)
 WITH r, packet, srcItf, inAclRule WHERE inAclRule.action = 'ACCEPT'
 // DESTINATION:
 OPTIONAL MATCH (r)-[:CONTAINS*3]->(dest:Ip4Ctp {ipAddr: packet.dstIp})
 WITH r, packet, srcItf, dest
 FOREACH (x IN CASE WHEN dest IS NOT NULL THEN [dest] ELSE [] END |
-    MERGE (packet)-[:REACHED {simulation: true}]->(x)
+    MERGE (packet)-[:REACHED {hop: $hop}]->(x)
 )
 // FORWARDING:
 WITH r, packet, srcItf
@@ -61,15 +64,15 @@ CALL {
     RETURN fib, egrItf
 }
 WITH DISTINCT r, packet, egrItf, fib
-MERGE (fib)<-[:FWD_WITH {simulation: true}]-(packet)
+MERGE (fib)<-[:FWD_WITH {hop: $hop}]-(packet)
 WITH r, packet, egrItf
 // ACL OUT:
 MATCH (acl:AclRule {direction: 'egress'})
 WHERE ((acl)<-[:HAS_ACL]-(r) OR (acl)<-[:HAS_ACL]-(egrItf)) AND (acl.sIP = packet.srcIp OR acl.sIP = 'ANY') AND (acl.sPort = packet.srcPort OR acl.sPort = 'ANY') AND (acl.dIP = packet.dstIp OR acl.dIP = 'ANY') AND (acl.dPort = packet.dstPort OR acl.dPort = 'ANY') AND (acl.protocol = packet.protocol OR acl.protocol = 'ANY')
 WITH packet, egrItf, acl ORDER BY acl.priority DESC
 WITH packet, egrItf, head(collect(acl)) as outAclRule
-MERGE (outAclRule)-[:APPLIES_OUT_ACL {action: outAclRule.action, simulation: true}]->(packet)
+MERGE (outAclRule)-[:APPLIES_OUT_ACL {action: outAclRule.action, hop: $hop}]->(packet)
 WITH packet, egrItf, outAclRule WHERE outAclRule.action = 'ACCEPT'
 MATCH (egrItf)-[:HAS_LINK]->(nh:Ltp)
-CALL custom.trHop(id(packet),id(nh)) YIELD ignored
+CALL custom.trHop(id(packet),id(nh),$hop+1) YIELD ignored
 RETURN null AS ignored", 'write')

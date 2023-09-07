@@ -1,59 +1,3 @@
-================================= Filter ======================================
-MATCH (r:Router {name: 'leaf01'})
-CREATE (r)-[:HAS_FILTER]->(f:Filter)
-SET f.type = 'outbound', f.name = 'l01-allow-all', f.prefix = '*', f.priority = 10. f.action = 'PERMIT'
-----
-MATCH (r:Router {name: 'leaf01'})
-CREATE (r)-[:HAS_FILTER]->(f:Filter)
-SET f.type = 'outbound', f.name = 'l01-deny-private', f.prefix = '10.0.0.0:8-32', f.priority = 1, f.action = 'DENY'
-
-
-================================= Install connected routes ==========================
-MATCH (r:Router)-[:HAS_LTP]->(l:Ltp)-[*2]->(reg:Ip4Ctp), (l)-[:HAS_LINK]-(:Ltp)-[*2]->(to:Ip4Ctp)
-WHERE reg.subnet_address = to.subnet_address
-WITH r, to.subnet_address AS to, to.ip_address AS via, reg
-MERGE (r)-[:HAS_FIB {simulation: true}]->(f:FibRoute {to: to, via: via, type: 'C', cost: 1, simulation: true})-[:EGRESS {simulation:true}]->(reg)
-
-================================= Install BGP routes =======================
-MATCH (rr:Route)<-[:HAS_ROUTE]-(r:Router) WHERE size(rr.path) > 0
-MATCH (nh:Ip4Ctp)-[:HAS_IP4CTP]-(:EtherCtp)-[:HAS_ETHERCTP]-(:Ltp)-[:HAS_LINK]-(:Ltp)-[:HAS_ETHERCTP]-(:EtherCtp)-[:HAS_IP4CTP]-(reg:Ip4Ctp)
-WHERE nh.ip_address = rr.next_hop
-MERGE (r)-[:HAS_FIB {simulation: true}]->(f:FibRoute {to: rr.prefix, via: rr.next_hop, type: 'B', cost: size(rr.path), simulation: true})-[:EGRESS {simulation:true}]->(reg)
-
-================================= Announce FIB routes ===============
-MATCH (r:Router)-[:HAS_FIB]->(f:FibRoute) WHERE f.to STARTS WITH '2.128'
-MERGE (r)-[:HAS_ROUTE {simulation: true}]->(newRoute:Route {prefix: f.to, origin_as: r.asn, local_pref: 200, med: 0, next_hop: f.via, best_path: true, communities: [], path: [], simulation: true})
-WITH newRoute
-CALL custom.propagateBGP(id(newRoute)) YIELD ignored
-RETURN null as ignored
-
-
-================================= Install a static route then announce it ===========
-MATCH (r1:Router{name:'Router1'})-[:HAS_LTP]->(l:Ltp {name: 'to_host1'})-[*2]->(reg:Ip4Ctp)
-MERGE (r1)-[:HAS_FIB {simulation: true}]->(f:FibRoute {to: '', via: '', type: 'S', cost: 1, simulation: true})-[:EGRESS {simulation:true}]->(reg)
-MERGE (newRoute:Route {prefix: f.to, origin_as: r1.asn, local_pref: 300, med: 0, next_hop: f.via, best_path: true, communities: [], path: [], simulation: true})
-MERGE (r1)-[r:HAS_ROUTE {simulation: true}]->(newRoute)
-WITH newRoute
-CALL custom.propagateBGP(id(newRoute)) YIELD ignored
-RETURN null as ignored
-
-================================= Announce a range of routes ========================
-MATCH (r1:Router{name:'Router1'})
-UNWIND range(0, 32) AS i
-MERGE (r1)-[r:HAS_ROUTE {simulation: true}]->(newRoute:Route {prefix: "192.168.0.0/"+i, origin_as: 100, local_pref: 200, med: 0, next_hop: "192.0.2.2", best_path: true, communities: [], path: [], simulation: true})
-WITH newRoute
-CALL custom.propagateBGP(id(newRoute)) YIELD ignored
-RETURN null as ignored
-
-================================= Announce one route ================================
-MATCH (r1:Router{name:'leaf01'})
-MERGE (newRoute:Route {prefix: "10.11.200.0/24", origin_as: r1.asn, local_pref: 300, med: 0, next_hop: "192.0.2.2", best_path: true, communities: [], path: [], simulation: true})
-MERGE (r1)-[r:HAS_ROUTE {simulation: true}]->(newRoute)
-WITH newRoute
-CALL custom.propagateBGP4(id(newRoute)) YIELD ignored
-RETURN null as ignored
-
-======================================================================================================================
 CALL apoc.custom.declareProcedure("runBGP(route_id::INT) :: (ignored::INT)", 
 "WITH $route_id AS route_id
 MATCH (r1:Router)-[:HAS_ROUTE]->(route:Route) WHERE id(route) = route_id
@@ -104,7 +48,7 @@ RETURN null AS ignored", 'write')
 
 ==================================================================================
 
-// DEMO:
+// Examples:
 
 // denied route:
 MATCH (r1:Router{name:'leaf01'})
@@ -113,9 +57,7 @@ MERGE (r1)-[r:HAS_ROUTE {simulation: true}]->(newRoute)
 WITH newRoute
 CALL custom.runBGP(id(newRoute)) YIELD ignored
 RETURN null as ignored
-
 ----
-
 MATCH (route:Route)<-[:APPLIES_OUTBOUND_FILTER]-(filter:Filter)<-[:HAS_FILTER]-(router:Router)
 WHERE route.prefix = '10.0.0.0/8'
 RETURN route, filter, router
@@ -128,15 +70,11 @@ MERGE (r1)-[r:HAS_ROUTE {simulation: true}]->(newRoute)
 WITH newRoute
 CALL custom.runBGP(id(newRoute)) YIELD ignored
 RETURN null as ignored
-
 ----
-
 MATCH (r:Router)-[:HAS_ROUTE]->(rr:Route)
 WHERE rr.prefix STARTS WITH '10.11.200.0'
 RETURN r,rr
-
 ----
-
 MATCH path=(l02:Router{name:'leaf02'})-[:HAS_ROUTE]->(route:Route)-[:LEARNED_FROM]-(from_update:BgpUpdate)-[:RECEIVES_UPDATE]-(p:BgpPeer)-[:PEERS_WITH]-(sp:BgpPeer)-[:HAS_BGP_PEER]-(:Ip4Ctp)-[:CONTAINS*2]-(:Ltp)-[:CONTAINS]-(from_router:Router)
 WHERE route.prefix STARTS WITH '10.11.200.0'
 RETURN path
