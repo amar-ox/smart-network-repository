@@ -2,7 +2,7 @@ CALL apoc.custom.declareProcedure("runBGP(route_id::INT) :: (ignored::INT)",
 "WITH $route_id AS route_id
 MATCH (r1:Router)-[:HAS_ROUTE]->(route:Route) WHERE id(route) = route_id
 MATCH (r1)-[:HAS_FILTER]->(filter:Filter {type: 'outbound'})
-WITH r1, route, filter, ip.isInPrefixRange(filter.prefix, route.prefix) AS result WHERE result = true OR filter.filter_as = route.origin_as 
+WITH r1, route, filter, net.ip.isInPrefixRange(filter.prefix, route.prefix) AS result WHERE result = true OR filter.filter_as = route.origin_as 
 WITH r1, route, filter
 ORDER BY filter.priority ASC
 WITH r1, route, head(collect(filter)) as firstMatchingFilter
@@ -21,7 +21,7 @@ WITH bgpPeer2, receivedUpdate
 MATCH (bgpPeer2)<-[:HAS_BGP_PEER]-(:Ip4Ctp)<-[:CONTAINS]-(:EtherCtp)<-[:CONTAINS]-(:Ltp)<-[:CONTAINS]-(r2:Router)
 WHERE NOT r2.asn IN receivedUpdate.path
 MATCH (r2)-[:HAS_FILTER]->(filter:Filter {type: 'inbound'})
-WITH r2, receivedUpdate, filter, ip.isInPrefixRange(filter.prefix, receivedUpdate.prefix) AS result WHERE result = true OR filter.filter_as = receivedUpdate.origin_as
+WITH r2, receivedUpdate, filter, net.ip.isInPrefixRange(filter.prefix, receivedUpdate.prefix) AS result WHERE result = true OR filter.filter_as = receivedUpdate.origin_as
 WITH r2, receivedUpdate, filter
 ORDER BY filter.priority ASC
 WITH r2, receivedUpdate, head(collect(filter)) as firstMatchingFilter
@@ -43,7 +43,7 @@ ORDER BY route.local_pref DESC, route.med ASC, size(route.path) ASC
 WITH r2, COLLECT(route) AS routes
 SET HEAD(routes).best_path = true
 WITH r2, id(HEAD(routes)) AS bestRouteId WHERE HEAD(routes).originRouteId = $route_id 
-CALL custom.runBGP(bestRouteId) YIELD ignored
+//CALL custom.runBGP(bestRouteId) YIELD ignored
 RETURN null AS ignored", 'write')
 
 ==================================================================================
