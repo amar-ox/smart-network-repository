@@ -38,6 +38,9 @@ public class BgpFilter {
 	
 	@JsonProperty("PREFIX")
 	private String prefix;
+
+	@JsonProperty("FILTER_AS")
+	private int filterAs;
 	
 	@JsonProperty(value = "SET_COMMUNITIES", required = false)
 	private String setCommunities = null;
@@ -92,6 +95,12 @@ public class BgpFilter {
 	}
 	public void setPrefix(String prefix) {
 		this.prefix = prefix;
+	}
+	public int getFilterAs() {
+		return filterAs;
+	}
+	public void setFilterAs(int filterAs) {
+		this.filterAs = filterAs;
 	}
 	public String getSetCommunities() {
 		return setCommunities;

@@ -78,6 +78,9 @@ public class GraphCreator {
 	    processBgpNeighbors(bgpNeighbors);
 	    connectBgpNeighbors();
 
+		JsonArray bgpFilters = input.getJsonArray("bgpFilter");
+	    processBgpFilters(bgpFilters);
+
 	    // JsonArray aclTables = input.getJsonArray("aclTable");
 	    // sortAclTables(aclTables);
 	    // processAclTables();
@@ -239,6 +242,22 @@ public class GraphCreator {
 	    	output.add(result);
 	    });
 	}
+
+	private void processBgpFilters(JsonArray bgpFilters) {
+		// TODO: support optional fields
+		String q = "T14@" + CypherQuery.Graph.CREATE_BGPFILTER;
+		bgpFilters.forEach(e -> {
+			JsonObject bgpF = (JsonObject) e;
+	    	String result = String.format(q, 
+	    			bgpF.getString("host"), 
+	    			bgpF.getString("type"),
+	    			bgpF.getString("prefix"), 
+					bgpF.getInteger("filterAs"),
+	    			bgpF.getInteger("priority"),
+	    			bgpF.getString("action"));
+	    	output.add(result);
+	    });
+	}
 	
 	private void connectBgpNeighbors() {
 		String q = "T13@" + CypherQuery.Graph.AUTO_BGP_NEIGHBORS;
@@ -308,7 +327,7 @@ public class GraphCreator {
 					aclRule.getString("host"),
 	    			aclRule.getString("name"), 
 					aclRule.getString("table"),
-	    			aclRule.getLong("priority"), 
+	    			aclRule.getInteger("priority"), 
 	    			aclRule.getString("action"),
 	    			aclRule.getString("direction"),
 					aclRule.getString("dIP"),

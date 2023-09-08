@@ -1885,19 +1885,22 @@
         "TYPE": "inbound",
         "PRIORITY": 400,
         "PREFIX": "10.11.200.0:20-30",
+        "FILTER_AS": 0,
         "SET_COMMUNITIES":"20:30"
       },
       {
         "ACTION": "PERMIT",
         "TYPE": "inbound",
         "PRIORITY": 100,
-        "PREFIX": "*"
+        "PREFIX": "*",
+        "FILTER_AS": 0
       },
       {
         "ACTION": "PERMIT",
         "TYPE": "outbound",
         "PRIORITY": 20,
-        "PREFIX": "*"
+        "PREFIX": "*",
+        "FILTER_AS": 0
       }
     ]
   },
@@ -2469,6 +2472,7 @@
         "TYPE": "inbound",
         "PRIORITY": 400,
         "PREFIX": "10.11.200.0:20-30",
+        "FILTER_AS": 0,
         "SET_COMMUNITIES":"20:30",
         "SET_LOCALPREF":300
       },
@@ -2476,13 +2480,15 @@
         "ACTION": "PERMIT",
         "TYPE": "inbound",
         "PRIORITY": 100,
-        "PREFIX": "*"
+        "PREFIX": "*",
+        "FILTER_AS": 0
       },
       {
         "ACTION": "PERMIT",
         "TYPE": "outbound",
         "PRIORITY": 20,
-        "PREFIX": "*"
+        "PREFIX": "*",
+        "FILTER_AS": 0
       }
     ]
   },
@@ -4855,13 +4861,15 @@
         "ACTION": "PERMIT",
         "TYPE": "outbound",
         "PRIORITY": 400,
-        "PREFIX": "10.11.200.0:20-30"
+        "PREFIX": "10.11.200.0:20-30",
+        "FILTER_AS": 0
       },
       {
         "ACTION": "PERMIT",
         "TYPE": "inbound",
         "PRIORITY": 100,
-        "PREFIX": "*"
+        "PREFIX": "*",
+        "FILTER_AS": 0
       }
     ]
   },
@@ -5476,13 +5484,15 @@
         "ACTION": "PERMIT",
         "TYPE": "inbound",
         "PRIORITY": 200,
-        "PREFIX": "10.11.200.0:20-30"
+        "PREFIX": "10.11.200.0:20-30",
+        "FILTER_AS": 0
       },
       {
         "ACTION": "PERMIT",
         "TYPE": "outbound",
         "PRIORITY": 30,
-        "PREFIX": "*"
+        "PREFIX": "*",
+        "FILTER_AS": 0
       }
     ]
   },

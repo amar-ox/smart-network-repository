@@ -53,6 +53,7 @@ public class ConfigProcessor {
 	private JsonArray ipConns = new JsonArray();
 	private JsonArray ipRoutes = new JsonArray();	
 	private JsonArray bgpPeers = new JsonArray();
+	private JsonArray bgpFilters = new JsonArray();
 	private JsonArray aclTables = new JsonArray();
 	private JsonArray aclRules = new JsonArray();
 	
@@ -69,6 +70,7 @@ public class ConfigProcessor {
 		output.put("ipConn", ipConns);
 		output.put("ipRoute", ipRoutes);	
 		output.put("bgp", bgpPeers);
+		output.put("bgpFilter", bgpFilters);
 		output.put("aclTable", aclTables);
 		output.put("aclRule", aclRules);
 	}
@@ -245,25 +247,28 @@ public class ConfigProcessor {
 		    		bgpPeer.put("holdTime", e.getHoldTime());
 		    		bgpPeer.put("keepAlive", e.getKeepAlive()); 			
 		    		bgpPeers.add(bgpPeer);
+					
 		    	});
 		    }
 
 		    // step 7: BGP filters (route policies)
 		    if (config.getBgpFilter() != null) {
-		    	List<BgpFilter> bgpFilters = config.getBgpFilter();
-		    	bgpFilters.forEach(e -> {
+		    	List<BgpFilter> filters = config.getBgpFilter();
+		    	filters.forEach(e -> {
 		    		JsonObject bgpFilter = new JsonObject();
 		    		bgpFilter.put("host", deviceName);
 		    		bgpFilter.put("type", e.getType().getValue());
 		    		bgpFilter.put("prefix", e.getPrefix());
 		    		bgpFilter.put("priority", e.getPriority());
 		    		bgpFilter.put("action", e.getAction().getValue());
+					bgpFilter.put("filterAs", e.getFilterAs());
 		    		if (e.getSetCommunities() != null) {
 		    			bgpFilter.put("setCommunities", e.getSetCommunities());
 		    		}
 		    		if (e.getSetLocalPref() != null) {
 		    			bgpFilter.put("setLocalPref", e.getSetLocalPref());
 		    		}
+					bgpFilters.add(bgpFilter);
 		    	});
 		    }
 		    // step 8: ACL

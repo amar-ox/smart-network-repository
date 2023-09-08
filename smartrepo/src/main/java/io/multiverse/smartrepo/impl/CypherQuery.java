@@ -36,6 +36,8 @@ public class CypherQuery {
 		public static final String CREATE_BGP = "MATCH(r:Host {name:'%s'})-[:CONTAINS*3]->(c:Ip4Ctp{ipAddr:'%s'})\r\n"
 				+ "CREATE (c)-[:HAS_BGP_PEER]->(b:BgpPeer {peerIp:'%s', peerId:'%s', peerAs:'%s', "
 				+ "state: '%s', holdTime: '%s', keepAlive: '%s'});";
+		public static final String CREATE_BGPFILTER = "MATCH (h:Host {name:'%s'})\r\n" 
+				+ "CREATE (h)-[:HAS_FILTER]->(f:Filter {type:'%s', prefix:'%s', filter_as: '%s', priority: %s, action:'%s'});";
 		/* public static final String CREATE_ACLTABLE = "CREATE (a:Acl{stage: '%s', name: '%s', binding: '%s', type: '%s', description: '%s', rules:[]})\r\n"
 				+ "WITH a\r\n"
 				+ "MATCH (h:Host {name:'%s'})\r\n"
