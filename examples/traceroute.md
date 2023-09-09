@@ -1,35 +1,15 @@
-CALL custom.traceroute('leaf01', '10.0.104.104', '10.0.104.0/24', 33434, 'UDP') YIELD ignored
-RETURN ignored
-----
-MATCH (p:Packet)-[r]-(x)<-[:CONTAINS|HAS_ACL|HAS_FIB*1..3]-(h:Host)
-OPTIONAL MATCH (p)-[:REACHED]-(d)
-WITH DISTINCT h,r,x ORDER BY r.hop, id(r)
-RETURN h.name, r, x
-----
-MATCH (p:Packet)-[r]-()
-DELETE r,p
+# BGP "what-if" scenario
+Follow the steps below to run the example. 
 
-=================
-CALL apoc.custom.declareProcedure("traceroute(src::STRING, dst_ip::STRING, dst_sn::STRING, dst_port::INT, protocol::STRING) :: (ignored::INT)", 
-"MATCH (r:Router{name:$src})-[:CONTAINS]->(srcItf:Ltp {name: 'Loopback0'})-[*2]->(src:Ip4Ctp)
-MERGE (srcItf)<-[:IN_PACKET {hop: 0}]-(packet:Packet {srcIp: src.ipAddr, srcPort: 49152, dstIp: $dst_ip, dstPort: $dst_port, protocol: $protocol, dstSubnet: $dst_sn})
-WITH r, packet, srcItf
-MATCH (r)-[*3]->(d:Ip4Ctp)
-MATCH (r)-[:HAS_FIB]->(fib:FibRoute)-[:EGRESS]->(:Ip4Ctp)<-[*2]-(egrItf:Ltp)
-WHERE id(egrItf) <> id(srcItf) AND fib.to = packet.dstSubnet AND d.ipAddr <> packet.dstIp
-WITH DISTINCT r, packet, egrItf, fib
-MERGE (fib)<-[:FWD_WITH {hop: 0}]-(packet)
-WITH r, egrItf, packet
-MATCH (acl:AclRule {direction: 'egress'})
-WHERE ((acl)<-[:HAS_ACL]-(r) OR (acl)<-[:HAS_ACL]-(egrItf)) AND (acl.sIP = packet.srcIp OR acl.sIP = 'ANY') AND (acl.sPort = packet.srcPort OR acl.sPort = 'ANY') AND (acl.dIP = packet.dstIp OR acl.dIP = 'ANY') AND (acl.dPort = packet.dstPort OR acl.dPort = 'ANY') AND (acl.protocol = packet.protocol OR acl.protocol = 'ANY')
-WITH packet, egrItf, acl ORDER BY acl.priority DESC
-WITH packet, egrItf, head(collect(acl)) as outAclRule
-MERGE (outAclRule)-[:APPLIES_OUT_ACL {action: outAclRule.action, hop: 0}]->(packet)
-WITH packet, egrItf, outAclRule WHERE outAclRule.action = 'ACCEPT'
-MATCH (egrItf)-[:HAS_LINK]-(nh:Ltp)
-CALL custom.trHop(id(packet), id(nh), 1) YIELD ignored
-RETURN null AS ignored", 'write')
-----
+1. Access the Neo4j console from a browser at http://localhost:7474
+
+2. Run the following queries in the prompt:
+```bash
+// declare an empty procedure to avoid recursivity error
+CALL apoc.custom.declareProcedure("trHop(pkt_id::INT, itf_id::INT, hop::INT) :: (ignored::INT)", 
+"RETURN null AS ignored", 'read')
+```
+```bash
 CALL apoc.custom.declareProcedure("trHop(pkt_id::INT, itf_id::INT, hop::INT) :: (ignored::INT)", 
 "MATCH (packet:Packet) WHERE id(packet) = $pkt_id
 MATCH (r:Host)-[:CONTAINS]->(srcItf:Ltp)
@@ -76,3 +56,46 @@ WITH packet, egrItf, outAclRule WHERE outAclRule.action = 'ACCEPT'
 MATCH (egrItf)-[:HAS_LINK]->(nh:Ltp)
 CALL custom.trHop(id(packet),id(nh),$hop+1) YIELD ignored
 RETURN null AS ignored", 'write')
+```
+```bash
+CALL apoc.custom.declareProcedure("traceroute(src::STRING, dst_ip::STRING, dst_sn::STRING, dst_port::INT, protocol::STRING) :: (ignored::INT)", 
+"MATCH (r:Router{name:$src})-[:CONTAINS]->(srcItf:Ltp {name: 'Loopback0'})-[*2]->(src:Ip4Ctp)
+MERGE (srcItf)<-[:IN_PACKET {hop: 0}]-(packet:Packet {srcIp: src.ipAddr, srcPort: 49152, dstIp: $dst_ip, dstPort: $dst_port, protocol: $protocol, dstSubnet: $dst_sn})
+WITH r, packet, srcItf
+MATCH (r)-[*3]->(d:Ip4Ctp)
+MATCH (r)-[:HAS_FIB]->(fib:FibRoute)-[:EGRESS]->(:Ip4Ctp)<-[*2]-(egrItf:Ltp)
+WHERE id(egrItf) <> id(srcItf) AND fib.to = packet.dstSubnet AND d.ipAddr <> packet.dstIp
+WITH DISTINCT r, packet, egrItf, fib
+MERGE (fib)<-[:FWD_WITH {hop: 0}]-(packet)
+WITH r, egrItf, packet
+MATCH (acl:AclRule {direction: 'egress'})
+WHERE ((acl)<-[:HAS_ACL]-(r) OR (acl)<-[:HAS_ACL]-(egrItf)) AND (acl.sIP = packet.srcIp OR acl.sIP = 'ANY') AND (acl.sPort = packet.srcPort OR acl.sPort = 'ANY') AND (acl.dIP = packet.dstIp OR acl.dIP = 'ANY') AND (acl.dPort = packet.dstPort OR acl.dPort = 'ANY') AND (acl.protocol = packet.protocol OR acl.protocol = 'ANY')
+WITH packet, egrItf, acl ORDER BY acl.priority DESC
+WITH packet, egrItf, head(collect(acl)) as outAclRule
+MERGE (outAclRule)-[:APPLIES_OUT_ACL {action: outAclRule.action, hop: 0}]->(packet)
+WITH packet, egrItf, outAclRule WHERE outAclRule.action = 'ACCEPT'
+MATCH (egrItf)-[:HAS_LINK]-(nh:Ltp)
+CALL custom.trHop(id(packet), id(nh), 1) YIELD ignored
+RETURN null AS ignored", 'write')
+```
+
+## Example
+
+Clean results before running the example:
+```bash
+MATCH (n:Packet) DETACH DELETE n;
+```
+
+1. Simulate packet forwarding:
+```bash
+CALL custom.traceroute('leaf01', '10.0.104.104', '10.0.104.0/24', 33434, 'UDP') YIELD ignored
+RETURN ignored;
+```
+
+2. Print detailed forwarding process:
+```bash
+MATCH (p:Packet)-[r]-(x)<-[:CONTAINS|HAS_ACL|HAS_FIB*1..3]-(h:Host)
+OPTIONAL MATCH (p)-[:REACHED]-(d)
+WITH DISTINCT h,r,x ORDER BY r.hop, id(r)
+RETURN h.name, r, x
+```

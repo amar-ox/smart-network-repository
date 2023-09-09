@@ -4860,13 +4860,20 @@
       {
         "ACTION": "PERMIT",
         "TYPE": "outbound",
-        "PRIORITY": 400,
+        "PRIORITY": 10,
         "PREFIX": "10.11.200.0:20-30",
         "FILTER_AS": 0
       },
       {
         "ACTION": "PERMIT",
         "TYPE": "inbound",
+        "PRIORITY": 100,
+        "PREFIX": "*",
+        "FILTER_AS": 0
+      },
+      {
+        "ACTION": "DENY",
+        "TYPE": "outbound",
         "PRIORITY": 100,
         "PREFIX": "*",
         "FILTER_AS": 0

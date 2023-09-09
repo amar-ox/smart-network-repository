@@ -22,8 +22,8 @@ chmod +x build.sh run.sh
 ./run.sh
 ```
 
-## Use Smart Repository
-When the smartrepo services starts it automatically loads and example network and create the database in Neo4j. 
+## Use The Smart Repository
+When the smartrepo service starts, it automatically loads an example network and creates the database in Neo4j. 
 The Neo4j browser is accessible at [localhost](http://localhost:7474/browser/)
 
 Example queries are available in the `queries/` folder.
