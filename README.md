@@ -23,10 +23,14 @@ chmod +x build.sh run.sh
 ```
 
 ## Use The Smart Repository
-When the smartrepo service starts, it automatically loads an example network and creates the database in Neo4j. 
-The Neo4j console is accessible at http://localhost:7474
+When the Smart Repository starts, it automatically loads an example network and creates the database in Neo4j.
 
-Examples are available in the `examples/` folder.
+The example network is a [spine-leaf topology](https://docs.nvidia.com/networking-ethernet-software/nvidia-air/Pre-Built-Demos/) with 4 leaves, 4 spines, and 8 servers each connected on a different VLAN. The topology includes 2 border routers and 2 firewalls. The routing is realized with BGP.
+
+![example network](examples/example.png)
+*Image Source: [NVIDIA Corporation](https://docs.nvidia.com/networking-ethernet-software/nvidia-air/Pre-Built-Demos/)*
+
+Examples of "what-if" scenarios are available in the `examples/` folder.
 
 ## Contribute
 
