@@ -1,7 +1,8 @@
 # BGP "what-if" scenario
 Follow the steps below to run the example. 
 
-1. Access the Neo4j console from a browser at http://localhost:7474
+1. Access the Neo4j console from a browser at http://localhost:7474. 
+Use `neo4j` `12345` if prompted to connect.
 
 2. Run the following queries in the prompt:
 ```bash
