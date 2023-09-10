@@ -82,7 +82,7 @@ RETURN null as ignored;
 
 2. Print filters applied to the route:
 ```bash
-MATCH (route:Route)<-[:APPLIES_OUTBOUND_FILTER]-(filter:Filter)<-[:HAS_FILTER]-(router:Router)
+MATCH (route:Route)<-[]-(filter:Filter)<-[:HAS_FILTER]-(router:Router)
 WHERE route.prefix = '10.0.0.0/8'
 RETURN route, filter, router;
 ```
