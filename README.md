@@ -1,5 +1,7 @@
 ## Overview
-Smart network repository based on Neo4j graph database.
+Smart network repository based on Neo4j graph database. 
+
+[Watch demo!](https://www.youtube.com/watch?v=uINec_NDJfQ)
 
 ## Instructions
 
