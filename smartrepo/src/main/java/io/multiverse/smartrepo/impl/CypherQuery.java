@@ -118,11 +118,11 @@ public class CypherQuery {
 	}
 	
 	public static class Constraints {
-		public static final String UNIQUE_HOST = "CREATE CONSTRAINT unique_host IF NOT EXISTS ON (h:Host) ASSERT h.name IS UNIQUE";
-		public static final String UNIQUE_HOSTNAME = "CREATE CONSTRAINT unique_hostname IF NOT EXISTS ON (h:Host) ASSERT h.hostname IS UNIQUE";
+		public static final String UNIQUE_HOST = "CREATE CONSTRAINT unique_host IF NOT EXISTS FOR (h:Host) REQUIRE (h.name) IS UNIQUE";
+		public static final String UNIQUE_HOSTNAME = "CREATE CONSTRAINT unique_hostname IF NOT EXISTS FOR (h:Host) REQUIRE (h.hostname) IS UNIQUE";
 		public static final String UNIQUE_LTP = "";
 		public static final String UNIQUE_ETHERCTP = "";
-		public static final String UNIQUE_IP4CTP = "CREATE CONSTRAINT unique_ip_address IF NOT EXISTS ON (c:Ip4Ctp) ASSERT c.ipAddr IS UNIQUE";
+		public static final String UNIQUE_IP4CTP = "CREATE CONSTRAINT unique_ip_address IF NOT EXISTS FOR (c:Ip4Ctp) REQUIRE (c.ipAddr) IS UNIQUE";
 		public static final String UNIQUE_LINKCONN = "";
 		public static final String UNIQUE_IPCONN = "";
 		public static final String UNIQUE_BGP = "";
