@@ -7,7 +7,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:54:00:01:11:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "BorderRouter"
+      "TYPE": "Border"
     },
     "arp": [
       {
@@ -666,7 +666,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:54:00:02:22:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "BorderRouter"
+      "TYPE": "Border"
     },
     "arp": [
       {
@@ -1325,7 +1325,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:54:00:11:11:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "SpineRouter"
+      "TYPE": "Spine"
     },
     "arp": [
       {
@@ -1912,7 +1912,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:54:00:22:22:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "SpineRouter"
+      "TYPE": "Spine"
     },
     "arp": [
       {
@@ -2500,7 +2500,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:54:00:33:33:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "SpineRouter"
+      "TYPE": "Spine"
     },
     "arp": [
       {
@@ -3064,7 +3064,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:54:00:44:44:57",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "SpineRouter"
+      "TYPE": "Spine"
     },
     "arp": [
       {
@@ -4252,7 +4252,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:11:00:11:11:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "LeafRouter"
+      "TYPE": "Leaf"
     },
     "arp": [
       {
@@ -4888,7 +4888,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:22:00:22:22:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "LeafRouter"
+      "TYPE": "Leaf"
     },
     "arp": [
       {
@@ -5511,7 +5511,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:33:00:33:33:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "LeafRouter"
+      "TYPE": "Leaf"
     },
     "arp": [
       {
@@ -6125,7 +6125,7 @@
       "HWSKU": "Force10-S6000",
       "MAC": "52:44:00:44:44:56",
       "PLATFORM": "x86_64-kvm_x86_64-r0",
-      "TYPE": "LeafRouter"
+      "TYPE": "Leaf"
     },
     "arp": [
       {

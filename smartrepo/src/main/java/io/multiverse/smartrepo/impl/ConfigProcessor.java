@@ -105,9 +105,9 @@ public class ConfigProcessor {
 		    JsonObject newDevice = new JsonObject();
 			if (deviceType.equals(HostTypeEnum.Server)) {
 	    		newDevice.put("label", "EndSystem");
-	    	} else if (deviceType.equals(HostTypeEnum.BorderRouter) 
-	    			|| deviceType.equals(HostTypeEnum.SpineRouter) 
-	    			|| deviceType.equals(HostTypeEnum.LeafRouter) 
+	    	} else if (deviceType.equals(HostTypeEnum.Border) 
+	    			|| deviceType.equals(HostTypeEnum.Spine) 
+	    			|| deviceType.equals(HostTypeEnum.Leaf) 
 	    			|| deviceType.equals(HostTypeEnum.Firewall)) {
 	    		newDevice.put("label", "Router");
 	    	} else {
@@ -135,17 +135,17 @@ public class ConfigProcessor {
 		    List<Interface> netItfs = config.getNetInterface();
 		    if (deviceType.equals(HostTypeEnum.Server)) {
 	    		processServerInterfaces(deviceName, deviceType, netItfs);
-	    	} else if (deviceType.equals(HostTypeEnum.BorderRouter) 
-	    			|| deviceType.equals(HostTypeEnum.SpineRouter) 
-	    			|| deviceType.equals(HostTypeEnum.LeafRouter) 
+	    	} else if (deviceType.equals(HostTypeEnum.Border) 
+	    			|| deviceType.equals(HostTypeEnum.Spine) 
+	    			|| deviceType.equals(HostTypeEnum.Leaf) 
 	    			|| deviceType.equals(HostTypeEnum.Firewall)) {
 	    		processRouterInterfaces(deviceName, deviceType, netItfs);
 	    	}
 
 		    // step 2: VLAN for Routers
-		    if (deviceType.equals(HostTypeEnum.BorderRouter) 
-	    			|| deviceType.equals(HostTypeEnum.SpineRouter) 
-	    			|| deviceType.equals(HostTypeEnum.LeafRouter)) {
+		    if (deviceType.equals(HostTypeEnum.Border) 
+	    			|| deviceType.equals(HostTypeEnum.Spine) 
+	    			|| deviceType.equals(HostTypeEnum.Leaf)) {
 		    	List<Vlan> vlans = config.getVlan();
 		    	vlans.forEach(v -> {
 		    		findEtherAndSetVlan(deviceName, v);
@@ -160,9 +160,9 @@ public class ConfigProcessor {
 			HostTypeEnum deviceType = config.getMetadata().getType();
 		    
 		    // step 3: LLDP
-			if (deviceType.equals(HostTypeEnum.BorderRouter) 
-	    			|| deviceType.equals(HostTypeEnum.SpineRouter) 
-	    			|| deviceType.equals(HostTypeEnum.LeafRouter) 
+			if (deviceType.equals(HostTypeEnum.Border) 
+	    			|| deviceType.equals(HostTypeEnum.Spine) 
+	    			|| deviceType.equals(HostTypeEnum.Leaf) 
 	    			|| deviceType.equals(HostTypeEnum.Firewall)) {
 		    	List<Lldp> lldps = config.getLldp();
 		    	lldps.forEach(e -> {
@@ -272,9 +272,9 @@ public class ConfigProcessor {
 		    	});
 		    }
 		    // step 8: ACL
-		    if (deviceType.equals(HostTypeEnum.BorderRouter) 
-	    			|| deviceType.equals(HostTypeEnum.SpineRouter) 
-	    			|| deviceType.equals(HostTypeEnum.LeafRouter) 
+		    if (deviceType.equals(HostTypeEnum.Border) 
+	    			|| deviceType.equals(HostTypeEnum.Spine) 
+	    			|| deviceType.equals(HostTypeEnum.Leaf) 
 	    			|| deviceType.equals(HostTypeEnum.Firewall)) {
 		    	if (config.getAclTable() != null) {
 		    		List<AclTable> acls = config.getAclTable();

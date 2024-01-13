@@ -36,8 +36,12 @@ services:
       - /tmp/neo4j/data:/data
     environment:
       - NEO4J_AUTH=neo4j/12345-password
-      - NEO4J_PLUGINS=["apoc"]
-      - NEO4J_db_tx__log_rotation_retention__policy=false
+      - NEO4J_PLUGINS=["apoc","apoc-extended"]
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4J_dbms_security_procedures_unrestricted=apoc.*,algo.*,net.*
+      - NEO4J_dbms_security_procedures_allowlist=apoc.*,algo.*,net.*
     healthcheck:
         test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider localhost:7474 || exit 1"]
         interval: 5s

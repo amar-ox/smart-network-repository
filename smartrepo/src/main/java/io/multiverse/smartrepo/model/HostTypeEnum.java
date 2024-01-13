@@ -2,9 +2,9 @@ package io.multiverse.smartrepo.model;
 
 public enum HostTypeEnum {
 
-	SpineRouter("SpineRouter"),
-	LeafRouter("LeafRouter"),
-	BorderRouter("BorderRouter"),
+	Spine("Spine"),
+	Leaf("Leaf"),
+	Border("Border"),
 	Firewall("Firewall"),
 	Server("Server"),
 	Switch("Switch");

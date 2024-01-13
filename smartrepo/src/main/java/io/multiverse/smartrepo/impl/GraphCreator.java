@@ -67,9 +67,8 @@ public class GraphCreator {
 	    
 	    JsonArray links = input.getJsonArray("link");
 	    processLinks(links);
-	    
+
 	    // processAutoLc();
-	    processAutoLcSimple();
 	    
 	    JsonArray ipConns = input.getJsonArray("ipConn");
 	    processIpConns(ipConns);
@@ -124,7 +123,7 @@ public class GraphCreator {
 	}
 
 	private void processEtherCtps(JsonArray ctps) {
-		String q = "T6@" + CypherQuery.Graph.CREATE_ETHERCTP;
+		String q = "T6@" + CypherQuery.Graph.SET_ETHERCTP;
 		ctps.forEach(e -> {
 			JsonObject ctp = (JsonObject) e;
 	    	String result = String.format(q, 
@@ -198,12 +197,7 @@ public class GraphCreator {
 	    });
 	}
 	
-	/* private void processAutoLc() {
-		String q = "T10@" + CypherQuery.Graph.AUTO_LINKCONN;
-    	output.add(q);
-	} */
-	
-	private void processAutoLcSimple() {
+	private void processAutoLc() {
 		String q = "T10@" + CypherQuery.Graph.AUTO_LINKCONN;
     	output.add(q);
 	}
