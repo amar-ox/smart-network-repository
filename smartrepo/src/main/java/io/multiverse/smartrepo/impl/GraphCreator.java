@@ -70,8 +70,8 @@ public class GraphCreator {
 
 	    // processAutoLc();
 	    
-	    JsonArray ipConns = input.getJsonArray("ipConn");
-	    processIpConns(ipConns);
+	    // JsonArray ipConns = input.getJsonArray("ipConn");
+	    // processIpConns(ipConns);
 	    
 	    JsonArray bgpNeighbors = input.getJsonArray("bgp");
 	    processBgpNeighbors(bgpNeighbors);
@@ -101,8 +101,8 @@ public class GraphCreator {
 		hosts.forEach(e -> {
 	    	JsonObject host = (JsonObject) e;
 	    	String result = String.format(query, host.getString("label"),
-	    			host.getString("name"), host.getString("hostname"),
-    				host.getString("type"), host.getString("mac"),
+					host.getString("type"), host.getString("name"), 
+					host.getString("hostname"), host.getString("mac"),
     				host.getString("platform"),
     				host.getString("bgpAsn"), host.getString("bgpStatus"), 
 					host.getString("bgpId"), host.getString("hwsku"));
@@ -111,12 +111,17 @@ public class GraphCreator {
 	}
 
 	private void processLtps(JsonArray ltps) {
-		String query = "T5@" + CypherQuery.Graph.CREATE_LTP;
 		ltps.forEach(e -> {
 			JsonObject ltp = (JsonObject) e;
+			String query = "T5@" + CypherQuery.Graph.CREATE_LTP;
+			if (ltp.getString("type").equals("Bridge")) {
+				query = "T5@" + CypherQuery.Graph.CREATE_BRIDGE;
+			} else if (ltp.getString("type").equals("Loopback")) {
+				query = "T5@" + CypherQuery.Graph.CREATE_LOOPBACK;
+			}
 	    	String result = String.format(query, 
     				ltp.getString("host"), 
-    				ltp.getString("name"), ltp.getString("type"), ltp.getString("adminStatus"), ltp.getString("operStatus"),
+    				ltp.getString("name"), ltp.getString("adminStatus"), ltp.getString("operStatus"),
     				ltp.getString("index"), ltp.getString("speed"), ltp.getString("mtu"));
     		output.add(result);
 	    });
@@ -191,8 +196,8 @@ public class GraphCreator {
 	    			link.getString("srcHost"),
 	    			link.getString("srcInterface"),
 	    			link.getString("destHost"),
-	    			link.getString("destInterface"),
-	    			link.getString("name"));
+	    			link.getString("destInterface"));
+//	    			link.getString("name"));
 	    	output.add(result);
 	    });
 	}

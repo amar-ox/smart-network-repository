@@ -20,7 +20,7 @@ ORDER BY filter.priority ASC
 WITH r1, route, head(collect(filter)) as firstMatchingFilter
 MERGE (firstMatchingFilter)-[:APPLIES_OUTBOUND_FILTER {action: firstMatchingFilter.action, simulation: true}]->(route)
 WITH r1, route, firstMatchingFilter WHERE firstMatchingFilter.action = 'PERMIT'
-MATCH (r1)-[:HAS_PORT]->(:Port)-[:HAS_INTERFACE]->(ip:IPv4Endpoint)-[:HAS_BGP_PEER]->(bgpPeer:BgpPeer)
+MATCH (r1)-[:HAS_PORT]->(ip:Port)-[:HAS_BGP_PEER]->(bgpPeer:BgpPeer)
 WHERE NOT (route)-[:LEARNED_FROM]->(:BgpUpdate)<-[:RECEIVES_UPDATE]-(bgpPeer)
 MERGE (bgpUpdate:BgpUpdate {prefix: route.prefix, origin_as: route.origin_as, local_pref: route.local_pref, med: route.med, next_hop: ip.ipAddr, communities: route.communities, path: route.path + r1.asn})
 MERGE (bgpPeer)-[:BGP_UPDATE_TO_SEND {simulation:true}]->(bgpUpdate)
@@ -30,7 +30,7 @@ MATCH (bgpPeer)-[:HAS_BGP_SESSION]-(bgpPeer2:BgpPeer)
 MERGE (receivedUpdate:BgpUpdate {prefix: bgpUpdate.prefix, origin_as: bgpUpdate.origin_as, local_pref: bgpUpdate.local_pref, med: bgpUpdate.med, next_hop: bgpUpdate.next_hop, communities: bgpUpdate.communities, path: bgpUpdate.path, simulation: true})
 MERGE (bgpPeer2)-[ru:RECEIVES_UPDATE {simulation: true}]->(receivedUpdate)
 WITH bgpPeer2, receivedUpdate
-MATCH (bgpPeer2)<-[:HAS_BGP_PEER]-(:IPv4Endpoint)<-[:HAS_INTERFACE]-(:Port)<-[:HAS_PORT]-(r2:Router)
+MATCH (bgpPeer2)<-[:HAS_BGP_PEER]-(:Port)<-[:HAS_PORT]-(r2:Router)
 WHERE NOT r2.asn IN receivedUpdate.path
 MATCH (r2)-[:HAS_BGP_FILTER]->(filter:BgpFilter {type: 'inbound'})
 WITH r2, receivedUpdate, filter, net.ip.isInPrefixRange(filter.prefix, receivedUpdate.prefix) AS result WHERE result = true OR filter.filter_as = receivedUpdate.origin_as
@@ -111,7 +111,7 @@ RETURN r,rr;
 3. Print the complete propagation path of a route: 
 
 ```bash
-MATCH path=(l02:Router{name:'leaf02'})-[:HAS_ROUTE]->(route:Route)-[:LEARNED_FROM]-(from_update:BgpUpdate)-[:RECEIVES_UPDATE]-(p:BgpPeer)-[:HAS_BGP_SESSION]-(sp:BgpPeer)<-[:HAS_BGP_PEER]-(:IPv4Endpoint)<-[:HAS_INTERFACE]-(:Port)<-[:HAS_PORT]-(from_router:Router)
+MATCH path=(l02:Router{name:'leaf02'})-[:HAS_ROUTE]->(route:Route)-[:LEARNED_FROM]-(from_update:BgpUpdate)-[:RECEIVES_UPDATE]-(p:BgpPeer)-[:HAS_BGP_SESSION]-(sp:BgpPeer)<-[:HAS_BGP_PEER]-(:Port)<-[:HAS_PORT]-(from_router:Router)
 WHERE route.prefix STARTS WITH '10.11.200.0'
 RETURN path;
 ```

@@ -104,7 +104,7 @@ public class ConfigProcessor {
 			
 		    JsonObject newDevice = new JsonObject();
 			if (deviceType.equals(HostTypeEnum.Server)) {
-	    		newDevice.put("label", "EndSystem");
+	    		newDevice.put("label", "Server");
 	    	} else if (deviceType.equals(HostTypeEnum.Border) 
 	    			|| deviceType.equals(HostTypeEnum.Spine) 
 	    			|| deviceType.equals(HostTypeEnum.Leaf) 
@@ -386,7 +386,7 @@ public class ConfigProcessor {
 	    		ltp.put("host", deviceName);
 	    		ltp.put("hostType", hostType.getValue());
 	    		ltp.put("name", itfName);
-	    		ltp.put("type", itfType.getValue());
+	    		ltp.put("type", itfName.startsWith("Loopback") ? "Loopback" : itfType.getValue());
 	    		ltp.put("adminStatus", e.getAdminStatus().getValue());
 	    		ltp.put("operStatus", e.getOperStatus().getValue());
 	    		ltp.put("index", e.getIndex());
