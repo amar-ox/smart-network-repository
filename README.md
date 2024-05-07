@@ -17,7 +17,6 @@ The following instructions have been tested on Ubuntu (16.04, 18.04, 20.04) and 
 Open a terminal and issue the following commands:
 
 ```bash
-git clone https://github.com/amar-ox/smart-network-repository.git
 cd smart-network-repository/docker
 chmod +x build.sh run.sh
 ./build.sh
